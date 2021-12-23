@@ -2,7 +2,7 @@
 #
 # VERSION 0.0.3
 
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 MAINTAINER Alexey Lavrenuke <direvius@yandex-team.ru>
 # Version for desription
 ARG VERSION
@@ -39,26 +39,30 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/*
 
 ENV TELEGRAF_VERSION=1.19.1-1
-RUN curl -sL https://repos.influxdata.com/influxdb.key | gpg --import && \
+RUN apt-get update && \
+    apt-get install -y dirmngr && \
+    curl -sL https://repos.influxdata.com/influxdb.key | gpg --import && \
     wget https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}_amd64.deb.asc && \
     wget https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}_amd64.deb && \
     gpg --batch --verify telegraf_${TELEGRAF_VERSION}_amd64.deb.asc telegraf_${TELEGRAF_VERSION}_amd64.deb && \
     dpkg -i telegraf_${TELEGRAF_VERSION}_amd64.deb && \
     rm -f telegraf_${TELEGRAF_VERSION}_amd64.deb*
 
+COPY . /tmp/yatank
+
 ENV BUILD_DEPS="python3-dev build-essential gfortran libssl-dev libffi-dev"
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
     apt-get install -yq --no-install-recommends ${BUILD_DEPS} && \
     pip3 install --upgrade setuptools && \
-    pip3 install --upgrade pip==19.2.3 && \
-    pip3 install https://api.github.com/repos/yandex/yandex-tank/tarball/${BRANCH} && \
+    pip3 install --upgrade pip==20.3.4 && \
+    pip3 install /tmp/yatank && \
     apt-get autoremove -y ${BUILD_DEPS} && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* /var/tmp/* /root/.cache/*
 
-COPY files/bashrc /root/.bashrc
-COPY files/inputrc /root/.inputrc
+COPY docker/files/bashrc /root/.bashrc
+COPY docker/files/inputrc /root/.inputrc
 
 VOLUME ["/var/loadtest"]
 WORKDIR /var/loadtest

@@ -117,6 +117,13 @@ class Decoder(object):
                     {"label": label},
                     ts,
                     self.__make_protocodes_fields(data)
+                ),
+                # ans sizes for label
+                self.__make_points(
+                    prefix + "ans_sizes",
+                    {"label": label},
+                    ts,
+                    self.__make_sizes_out_fields(data)
                 )
             )
         )
@@ -162,6 +169,12 @@ class Decoder(object):
         return {
             str(code): int(cnt)
             for code, cnt in data["proto_code"]["count"].items()
+        }
+
+    @staticmethod
+    def __make_sizes_out_fields(data):
+        return {
+            str(name): int(val) for name, val in data["size_out"].items()
         }
 
     def __make_points(self, measurement, additional_tags, ts, fields):
